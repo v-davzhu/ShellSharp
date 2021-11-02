@@ -33,6 +33,8 @@
         {
             _shell.SendCommand(CommandToSend);
             LastCommandResult = await _shell.GetLastAnswer();
+
+            File.WriteAllText(Path.GetTempFileName(), LastCommandResult);
         }
     }
 }
