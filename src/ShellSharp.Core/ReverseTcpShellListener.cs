@@ -34,7 +34,7 @@ namespace ShellSharp.Core
         private string _commandToSend;
 
         private string _lastAnswer;
-        private byte[] _prompt;
+        private string _prompt;
 
         public string GetLastAnswer()
         {
@@ -75,7 +75,7 @@ namespace ShellSharp.Core
                     stream.ReadTimeout = 1000;
 
                     //receive the first stream of data.
-                    ReceiveData(stream, false);
+                    _prompt = ReceiveData(stream, false);
 
                     while (!_stopRequested)
                     {
@@ -112,18 +112,22 @@ namespace ShellSharp.Core
             // Loop to receive all the data sent by the client.
             MemoryStream ms = ReadFromStream(stream, isAnswerToCommand);
 
-            //we need to remove the first line if present
-            Span<byte> array;
+            var answer = Encoding.UTF8.GetString(ms.ToArray());
+
             if (isAnswerToCommand)
             {
-                array = LinuxShellUtils.ParseShellAnswer(ms);
-            }
-            else
-            {
-                array = _prompt = ms.ToArray();
-            }
+                if (answer.StartsWith(_commandToSend))
+                {
+                    answer = answer.Substring(_commandToSend.Length).TrimStart('\n', '\r');
+                }
 
-            var answer = Encoding.UTF8.GetString(array);
+                if (answer.EndsWith(_prompt))
+                {
+                    answer = answer
+                        .Substring(0, answer.Length - _prompt.Length)
+                        .TrimEnd('\n', '\r');
+                }
+            }
             return answer;
         }
 
@@ -133,11 +137,11 @@ namespace ShellSharp.Core
         /// did not have anymore data.
         /// </summary>
         /// <param name="stream"></param>
+        /// <param name="isAnswerToCommand"></param>
         /// <returns></returns>
-        private MemoryStream ReadFromStream(NetworkStream stream, bool waitForCommandAnswer)
+        private MemoryStream ReadFromStream(NetworkStream stream, Boolean isAnswerToCommand)
         {
             int timeoutCount = 0;
-            Boolean endCommandDetected = false;
             var ms = new MemoryStream();
             int bytesRead;
 
@@ -148,19 +152,23 @@ namespace ShellSharp.Core
                     bytesRead = stream.Read(_buffer, 0, _buffer.Length);
                     ms.Write(_buffer, 0, bytesRead);
 
-                    endCommandDetected =
-                        ByteArrayUtils.ContainsPattern(_buffer, _prompt) ||
-                        ByteArrayUtils.ContainsPattern(_buffer, LinuxShellUtils.EndCommandSequence, 0, bytesRead);
+                    if (!stream.DataAvailable && !string.IsNullOrEmpty(_prompt))
+                    {
+                        //we have no more data               
+                        var dataReceived = Encoding.UTF8.GetString(ms.ToArray());
+                        if (dataReceived.EndsWith(_prompt))
+                        {
+                            //data read finished, prompt received no need to wait anymore
+                            return ms;
+                        }
+                    }
                 }
                 catch (IOException)
                 {
-                    Console.WriteLine("Timeout: " + ms.Length);
                     timeoutCount++;
                 }
-            } while (timeoutCount == 0 || (
-                !endCommandDetected && timeoutCount < 10 && waitForCommandAnswer
-                )
-            );
+            } while (stream.DataAvailable || (isAnswerToCommand && timeoutCount < 10));
+
             return ms;
         }
     }
