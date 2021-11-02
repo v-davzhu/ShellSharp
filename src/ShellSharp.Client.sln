@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShellSharp.Client", "ShellS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShellSharp.Core", "ShellSharp.Core\ShellSharp.Core.csproj", "{B52FFBE8-C95C-46EB-A1AD-D0E3706876D0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellSharp.Tests", "ShellSharp.Tests\ShellSharp.Tests.csproj", "{122B9BEE-A8B4-4F7B-AB00-DE817B0ED3AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShellSharp.Tests", "ShellSharp.Tests\ShellSharp.Tests.csproj", "{122B9BEE-A8B4-4F7B-AB00-DE817B0ED3AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -31,16 +31,22 @@ namespace ShellSharp.Core
         private AutoResetEvent _commandWaitHandle = new AutoResetEvent(false);
         private AutoResetEvent _answerWaitHandle = new AutoResetEvent(false);
 
-        private string _commandToSend;
+        private string? _commandToSend;
 
-        private string _lastAnswer;
-        private string _prompt;
+        private string? _lastAnswer;
+        private string? _prompt;
 
-        public string GetLastAnswer()
+        /// <summary>
+        /// TODO: use https://devblogs.microsoft.com/pfxteam/building-async-coordination-primitives-part-2-asyncautoresetevent/
+        /// </summary>
+        /// <returns></returns>
+        public async Task<string?> GetLastAnswer()
         {
             _answerWaitHandle.WaitOne();
             return _lastAnswer;
         }
+
+        public bool IsConnected => !String.IsNullOrEmpty(_prompt);
 
         public void SendCommand(string command)
         {
@@ -144,7 +150,7 @@ namespace ShellSharp.Core
             int timeoutCount = 0;
             var ms = new MemoryStream();
             int bytesRead;
-
+            int maxTimeout = isAnswerToCommand ? 10 : 1;
             do
             {
                 try
@@ -167,7 +173,7 @@ namespace ShellSharp.Core
                 {
                     timeoutCount++;
                 }
-            } while (stream.DataAvailable || (isAnswerToCommand && timeoutCount < 10));
+            } while (stream.DataAvailable || (timeoutCount < maxTimeout));
 
             return ms;
         }

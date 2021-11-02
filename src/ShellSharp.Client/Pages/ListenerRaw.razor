@@ -1,0 +1,38 @@
+﻿@page "/listener-raw"
+@using ShellSharp.Core
+
+<h3>ListenerRaw</h3>
+
+<div>
+    Connected = <label>@_shell.IsConnected</label>
+</div>
+<button class="btn btn-primary" @onclick="Start">Start Listen</button>
+
+<div>
+    Command to send: <input @bind="CommandToSend" /> <button @onclick="SendCommand">Send Command</button>
+</div>
+<div>
+    <h4>Result last command</h4>
+    <pre>@LastCommandResult</pre>
+</div>
+@code {
+    private ReverseTcpShellListener _shell = new ReverseTcpShellListener(4444);
+
+    public string LastCommandResult { get; set; }
+
+    public string CommandToSend { get; set; }
+
+    public void Start()
+    {
+        _shell.Start();
+    }
+
+    public async Task SendCommand()
+    {
+        if (!String.IsNullOrEmpty(CommandToSend))
+        {
+            _shell.SendCommand(CommandToSend);
+            LastCommandResult = await _shell.GetLastAnswer();
+        }
+    }
+}
