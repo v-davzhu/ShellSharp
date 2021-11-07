@@ -15,7 +15,7 @@ namespace ShellSharp.Tests.Core.Utils
         [Test]
         public void RemoveFirstLine() 
         {
-            var data = ReadTestDataByteArray("linux\\shellanswer.bin");
+            var data = ReadTestDataByteArray("linux/shellanswer.bin");
             using var ms = new MemoryStream(data);
             var span = LinuxShellUtils.ParseShellAnswer(ms);
 
